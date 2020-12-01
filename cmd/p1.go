@@ -7,17 +7,19 @@ import (
     "strings"
 )
 
-func search(data []int, target int, num int) []int {
+func search(data map[int]struct{}, target int, num int) []int {
     if num <= 0 {
         return nil
-    }
-    for i, v := range data {
-        if num == 1 {
-            if v == target {
-                return []int{v}
-            }
+    } else if num == 1 {
+        _, ok := data[target]
+        if ok {
+            return []int{target}
         } else {
-            results := search(data[i+1:], target-v, num-1)
+            return nil
+        }
+    } else {
+        for v := range data {
+            results := search(data, target-v, num-1)
             if results != nil {
                 results = append([]int{v}, results...)
                 return results
@@ -42,13 +44,13 @@ func printResults(results []int) {
 }
 
 func main() {
-    data := make([]int, 0)
+    data := make(map[int]struct{}, 0)
     err := utils.OpenAndReadAll("input1.txt", func(s string) error {
         value, err := strconv.Atoi(s)
         if err != nil {
             return err
         }
-        data = append(data, value)
+        data[value] = struct{}{}
         return nil
     })
     if err != nil {
