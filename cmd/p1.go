@@ -7,7 +7,7 @@ import (
     "strings"
 )
 
-func search(data map[int]struct{}, target int, num int) []int {
+func search(data map[int]struct{}, visited map[int]struct{}, target int, num int) []int {
     if num <= 0 {
         return nil
     } else if num == 1 {
@@ -18,8 +18,37 @@ func search(data map[int]struct{}, target int, num int) []int {
             return nil
         }
     } else {
+        subvisited := make(map[int]struct{})
+        for v := range visited {
+            subvisited[v] = struct{}{}
+        }
         for v := range data {
-            results := search(data, target-v, num-1)
+            _, ok := visited[v]
+            if ok {
+                continue
+            }
+            subvisited[v] = struct{}{}
+            results := search(data, subvisited, target-v, num-1)
+            if results != nil {
+                results = append([]int{v}, results...)
+                return results
+            }
+        }
+    }
+    return nil
+}
+
+func slowsearch(data []int, target int, num int) []int {
+    if num <= 0 {
+        return nil
+    }
+    for i, v := range data {
+        if num == 1 {
+            if v == target {
+                return []int{v}
+            }
+        } else {
+            results := slowsearch(data[i+1:], target-v, num-1)
             if results != nil {
                 results = append([]int{v}, results...)
                 return results
@@ -44,13 +73,23 @@ func printResults(results []int) {
 }
 
 func main() {
-    data := make(map[int]struct{}, 0)
+    dataMap := make(map[int]struct{})
+    dataList := make([]int, 0)
+    useSlowSearch := false
     err := utils.OpenAndReadAll("input1.txt", func(s string) error {
         value, err := strconv.Atoi(s)
         if err != nil {
             return err
         }
-        data[value] = struct{}{}
+        dataList = append(dataList, value)
+        _, ok := dataMap[value]
+        if ok {
+            fmt.Printf("Found duplicate value. Using slow search.\n")
+            useSlowSearch = true
+        }
+        if !useSlowSearch {
+            dataMap[value] = struct{}{}
+        }
         return nil
     })
     if err != nil {
@@ -58,8 +97,19 @@ func main() {
     }
 
     fmt.Printf("Part One\n")
-    printResults(search(data, 2020, 2))
+    var results []int
+    if useSlowSearch {
+        results = slowsearch(dataList, 2020, 2)
+    } else {
+        results = search(dataMap, nil, 2020, 2)
+    }
+    printResults(results)
 
     fmt.Printf("Part Two\n")
-    printResults(search(data, 2020, 3))
+    if useSlowSearch {
+        results = slowsearch(dataList, 2020, 3)
+    } else {
+        results = search(dataMap, nil, 2020, 3)
+    }
+    printResults(results)
 }
