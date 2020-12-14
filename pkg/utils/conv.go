@@ -9,3 +9,11 @@ func AtoiOrPanic(s string) int {
 	}
 	return r
 }
+
+func AtoiOrPanic64(s string) int64 {
+	r, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
